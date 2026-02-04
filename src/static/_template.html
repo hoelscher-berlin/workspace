@@ -85,22 +85,26 @@ function showTemplateModal(title, text, confirm_label, confirm_class,
 }
 
 var server_tag = "#{(@session_user || {})[:server_tag]}";
+
 function check_server_online(server_tag, watch) {
     if (typeof(watch) === 'undefined') watch = false;
-    fetch(`/${server_tag}/`)
+    let url = `#{WEB_ROOT}/w/${server_tag}/`;
+    console.log(url);
+    fetch(url, {credentials: 'include'})
     .then(response => {
         if (response.status === 200) {
             console.log('Server is online');
             $('#bu_launch .bi').removeClass('bi-spin');
             $('#bu_launch').prop('disabled', false);
+            $('#bu_launch_share .bi').removeClass('bi-spin');
+            $('#bu_launch_share').prop('disabled', false);
             $('.bu-launch-test .bi').removeClass('bi-spin');
             $('.bu-launch-test').prop('disabled', false);
             $('.bu-open-workspace-as-admin .bi').removeClass('bi-spin');
             $('.bu-open-workspace-as-admin').prop('disabled', false);
-            let url = window.location.origin.replace('//', watch ? '//watch.' : '//code.');
-            console.log(`Now opening ${url}`);
-            window.open(url, '_blank');
-            // window.open(`/${server_tag}/`, '_blank');
+            let workspace_url = `#{WEB_ROOT}`.replace('//', `//${server_tag}.`);
+            console.log(`Now opening ${workspace_url}`);
+            window.open(workspace_url, '_blank');
         } else {
             console.log('Server is offline');
             setTimeout(function() { check_server_online(server_tag, watch); }, 500);
@@ -248,6 +252,7 @@ window.addEventListener('load', function() {
         $('#bu_launch').prop('disabled', true);
         $('#bu_launch .bi').addClass('bi-spin');
         api_call('/api/start_server', {}, function(data) {
+            console.log(data);
             check_server_tag_update(data.server_tag);
             check_server_online(data.server_tag);
         });
@@ -258,6 +263,7 @@ window.addEventListener('load', function() {
         button.prop('disabled', true);
         button.find('.bi').addClass('bi-spin');
         api_call('/api/start_server', {test_tag: test_tag}, function(data) {
+            console.log(data);
             check_server_tag_update(data.server_tag);
             check_server_online(data.server_tag);
         });
@@ -326,8 +332,9 @@ window.addEventListener('load', function() {
         api_call('/api/start_neo4j', {}, function(data) {
             $('#bu_neo4j').prop('disabled', false);
             $('#bu_neo4j .bi').removeClass('bi-spin');
-            console.log('#{NEO4J_WEB_ROOT}');
-            window.open('#{NEO4J_WEB_ROOT}', '_blank');
+            let url = data.browser_url;
+            console.log(url);
+            window.open(url, '_blank');
         });
     });
 
@@ -398,7 +405,7 @@ window.addEventListener('load', function() {
                 <button style='#{(@session_user.nil? || (!@session_user[:show_workspace])) ? 'display: none;' : ''}' id='bu_launch' class="btn btn-success"><i class='bi bi-code-slash'></i>Workspace öffnen</button>
                 <button style='#{(@session_user.nil? || (!@session_user[:show_phpmyadmin])) ? 'display: none;' : ''}' id='bu_phpmyadmin' class="btn btn-success" target="_blank"><i class='bi bi-database-fill'></i>phpMyAdmin</button>
                 <button style='#{(@session_user.nil? || (!@session_user[:show_pgadmin])) ? 'display: none;' : ''}' id='bu_pgadmin' class="btn btn-success" target="_blank"><i class='bi bi-database-fill'></i>pgAdmin</button>
-                <!-- <button style='#{(@session_user.nil? || (!@session_user[:show_neo4j])) ? 'display: none;' : ''}' id='bu_neo4j' class="btn btn-success" target="_blank"><i class='bi bi-database-fill'></i>Neo4j</button> -->
+                <button style='#{(@session_user.nil? || (!@session_user[:show_neo4j])) ? 'display: none;' : ''}' id='bu_neo4j' class="btn btn-success" target="_blank"><i class='bi bi-database-fill'></i>Neo4j</button>
                 <a style='#{(@session_user.nil? || (!@session_user[:show_tic80])) ? 'display: none;' : ''}' href="/tic80/" class="btn btn-success" target="_blank"><i class='bi bi-keyboard'></i>TIC-80</a>
                 <a href='/profil' style='#{@session_user.nil? ? 'display: none;' : ''}' class="btn btn-primary"><i class='bi bi-person-vcard'></i>#{((@@invitations[(@session_user || {})[:email]] || {})[:name] || '')}</a>
                 <a href='/admin' style='#{teacher_logged_in? ? '' : 'display: none;'}' class="btn btn-warning"><i class='bi bi-wrench-adjustable'></i>Administration</a>

@@ -1,4 +1,4 @@
-FROM linuxserver/code-server:4.103.2
+FROM linuxserver/code-server:4.108.2
 
 # Set user home directory early (rarely changed)
 RUN usermod -d /workspace abc
@@ -80,8 +80,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG TL_YEAR=2025
 ENV TEXLIVE_DIR=/usr/local/texlive/${TL_YEAR}
 ENV PATH=${TEXLIVE_DIR}/bin/x86_64-linux:$PATH
-ENV MANPATH=${TEXLIVE_DIR}/texmf-dist/doc/man:$MANPATH
-ENV INFOPATH=${TEXLIVE_DIR}/texmf-dist/doc/info:$INFOPATH
+ENV MANPATH=${TEXLIVE_DIR}/texmf-dist/doc/man
+ENV INFOPATH=${TEXLIVE_DIR}/texmf-dist/doc/info
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       perl wget xz-utils tar fontconfig ghostscript ca-certificates \
@@ -121,6 +121,37 @@ RUN tlmgr option repository ctan && \
 COPY dart.deb /
 # Dart SDK install in one step
 RUN dpkg -i /dart.deb && rm /dart.deb
+
+# Install Cypher Shell
+RUN curl -fsSL https://debian.neo4j.com/neotechnology.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/neo4j.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/neo4j.gpg] https://debian.neo4j.com stable latest" | sudo tee /etc/apt/sources.list.d/neo4j.list
+RUN apt-get update && apt-get install -y cypher-shell && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+  fonts-anonymous-pro \
+  fonts-atkinson-hyperlegible \
+  fonts-bebas-neue \
+  fonts-cantarell \
+  fonts-cmu \
+  fonts-comfortaa \
+  fonts-comic-neue \
+  fonts-crosextra-caladea \
+  fonts-crosextra-carlito \
+  fonts-ebgaramond \
+  fonts-firacode \
+  fonts-hack \
+  fonts-ibm-plex \
+  fonts-inter \
+  fonts-jetbrains-mono \
+  fonts-liberation \
+  fonts-lmodern \
+  fonts-montserrat \
+  fonts-space-grotesk-ttf \
+  fonts-stix \
+  fonts-ubuntu \
+  fonts-vollkorn \
+  texlive-fonts-recommended \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* && fc-cache -f -v
 
 # Add environment variable for gems only once
 RUN echo "export GEM_HOME=\$HOME/.gem" >> /root/.bashrc
